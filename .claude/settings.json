@@ -2,9 +2,13 @@
   "extraKnownMarketplaces": {
     "social-media-skills": {
       "source": { "source": "github", "repo": "charlie947/social-media-skills" }
+    },
+    "knowledge-work-plugins": {
+      "source": { "source": "github", "repo": "anthropics/knowledge-work-plugins" }
     }
   },
   "enabledPlugins": {
-    "social-media-skills@social-media-skills": true
+    "social-media-skills@social-media-skills": true,
+    "marketing@knowledge-work-plugins": true
   }
 }
