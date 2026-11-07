@@ -144,6 +144,25 @@ def detect_gpu():
     return info
 
 
+_ENCODER_TEST_CACHE = {}
+
+
+def _encoder_works(encoder):
+    """Return True if ffmpeg can actually encode a tiny test clip with `encoder`."""
+    if encoder not in _ENCODER_TEST_CACHE:
+        cmd = [
+            "ffmpeg", "-hide_banner", "-loglevel", "error",
+            "-f", "lavfi", "-i", "color=c=black:s=256x256:d=0.1",
+            "-frames:v", "1", "-c:v", encoder, "-f", "null", "-",
+        ]
+        try:
+            r = subprocess.run(cmd, capture_output=True, timeout=30)
+            _ENCODER_TEST_CACHE[encoder] = r.returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            _ENCODER_TEST_CACHE[encoder] = False
+    return _ENCODER_TEST_CACHE[encoder]
+
+
 def get_ffmpeg_encoder(gpu_info=None):
     """Choose the best available H.264 encoder.
 
@@ -152,21 +171,22 @@ def get_ffmpeg_encoder(gpu_info=None):
     if gpu_info is None:
         gpu_info = detect_gpu()
 
-    # NVIDIA
+    # Hardware encoders are only used if a quick test encode succeeds:
+    # ffmpeg may be built with h264_qsv/h264_amf/h264_nvenc support even when
+    # the matching GPU (or its driver) is not present, e.g. in containers.
+    candidates = []
     if gpu_info.get("cuda"):
-        return "h264_nvenc", ["-preset", "p4", "-cq", "20"]
-
-    # Apple VideoToolbox
+        candidates.append(("h264_nvenc", ["-preset", "p4", "-cq", "20"]))
     if gpu_info.get("videotoolbox"):
-        return "h264_videotoolbox", ["-q:v", "65"]
-
-    # Intel QSV
+        candidates.append(("h264_videotoolbox", ["-q:v", "65"]))
     if gpu_info.get("qsv"):
-        return "h264_qsv", ["-global_quality", "23"]
-
-    # AMD AMF
+        candidates.append(("h264_qsv", ["-global_quality", "23"]))
     if gpu_info.get("amf"):
-        return "h264_amf", ["-quality", "balanced", "-rc", "cqp", "-qp_i", "20", "-qp_p", "22"]
+        candidates.append(("h264_amf", ["-quality", "balanced", "-rc", "cqp", "-qp_i", "20", "-qp_p", "22"]))
+
+    for name, args in candidates:
+        if _encoder_works(name):
+            return name, args
 
     # CPU fallback
     return "libx264", ["-preset", "fast", "-crf", "18"]
