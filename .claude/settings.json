@@ -1,14 +1,27 @@
 {
   "extraKnownMarketplaces": {
     "social-media-skills": {
-      "source": { "source": "github", "repo": "charlie947/social-media-skills" }
+      "source": {
+        "source": "github",
+        "repo": "charlie947/social-media-skills"
+      }
     },
     "knowledge-work-plugins": {
-      "source": { "source": "github", "repo": "anthropics/knowledge-work-plugins" }
+      "source": {
+        "source": "github",
+        "repo": "anthropics/knowledge-work-plugins"
+      }
+    },
+    "superpowers-dev": {
+      "source": {
+        "source": "github",
+        "repo": "profmarcelosampaio-droid/superpowers"
+      }
     }
   },
   "enabledPlugins": {
     "social-media-skills@social-media-skills": true,
-    "marketing@knowledge-work-plugins": true
+    "marketing@knowledge-work-plugins": true,
+    "superpowers@superpowers-dev": true
   }
 }
